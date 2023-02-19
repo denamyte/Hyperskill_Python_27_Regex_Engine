@@ -68,5 +68,8 @@ files:
         RegexTest('regex.regex').run_tests()
   learner_created: false
 feedback_link: https://hyperskill.org/learn/step/10241#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Sun, 19 Feb 2023 13:03:17 UTC"
 record: -1

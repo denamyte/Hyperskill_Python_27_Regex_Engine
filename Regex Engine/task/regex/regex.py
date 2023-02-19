@@ -1,6 +1,5 @@
-# I did not change a word in the code since Stage 1, except this comment
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Iterable
 
 
 def main():
@@ -13,7 +12,7 @@ class RegexEntity(ABC):
         self._pattern = pattern
 
     @abstractmethod
-    def apply(self, text: str) -> List[int]:
+    def apply(self, text: str) -> Iterable[int]:
         """
         Try to apply the regex against the text and return all possible
         indexes where the regex ends matching the text.
@@ -77,8 +76,12 @@ class RegexText(RegexEntity):
         super().__init__(text)
 
     def apply(self, text: str):
-        end = len(self._pattern)
-        return [end] if text[:end] == self._pattern else []
+        pt_len = len(self._pattern)
+        if pt_len > len(text):
+            return False
+        indexes = [pt_len + i if self._pattern == text[i:pt_len + i] else -1
+                   for i in range(len(text) - pt_len + 1)]
+        return list(filter(lambda x: x > -1, indexes))
 
 
 if __name__ == '__main__':

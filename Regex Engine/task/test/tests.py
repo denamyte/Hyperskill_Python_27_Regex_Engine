@@ -22,7 +22,14 @@ class RegexTest(StageTest):
         (".....", "apple",  "True",     "The wild-card '.' should match any single character in a string."),
         ("", "apple",       "True",     "An empty regex always returns True!"),
         ("apple", "",       "False",    "A non-empty regex and an empty input string always returns False!"),
-        ("apple", "peach",  "False",    "Two different patterns should not return True!")
+        ("apple", "peach",  "False",    "Two different patterns should not return True!"),
+        # stage 3
+        ("le", "apple",     "True",     "If the input string contains the regex, it should return True!"),
+        ("app", "apple",    "True",     "If the input string contains the regex, it should return True!"),
+        ("a", "apple",      "True",     "If the input string contains the regex, it should return True!"),
+        (".", "apple",      "True",     "Even a single wild-card character '.' can produce a match!"),
+        ("apwle", "apple",  "False",    "Two different patterns should not return True!"),
+        ("peach", "apple",  "False",    "Two different patterns should not return True!")
     ]
 
 
