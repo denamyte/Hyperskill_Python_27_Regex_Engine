@@ -138,6 +138,6 @@ files:
     if __name__ == '__main__':
         RegexTest('regex.regex').run_tests()
   learner_created: false
-feedback_link: https://hyperskill.org/projects/114/stages/624/implement#comment
+feedback_link: https://hyperskill.org/learn/step/10244#comment
 status: Unchecked
 record: -1

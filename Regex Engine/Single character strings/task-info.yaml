@@ -51,6 +51,9 @@ files:
     if __name__ == '__main__':
         RegexTest('regex.regex').run_tests()
   learner_created: false
-feedback_link: https://hyperskill.org/projects/114/stages/619/implement#comment
-status: Unchecked
+feedback_link: https://hyperskill.org/learn/step/10239#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Sun, 19 Feb 2023 12:22:06 UTC"
 record: -1

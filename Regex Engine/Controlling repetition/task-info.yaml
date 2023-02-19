@@ -125,6 +125,6 @@ files:
     if __name__ == '__main__':
         RegexTest('regex.regex').run_tests()
   learner_created: false
-feedback_link: https://hyperskill.org/projects/114/stages/623/implement#comment
+feedback_link: https://hyperskill.org/learn/step/10243#comment
 status: Unchecked
 record: -1
