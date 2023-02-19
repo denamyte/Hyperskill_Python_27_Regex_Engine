@@ -1,3 +1,4 @@
+# I did not change a word in the code since Stage 1, except this comment
 from abc import ABC, abstractmethod
 from typing import List
 
