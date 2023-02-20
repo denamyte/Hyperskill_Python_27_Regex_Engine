@@ -1,5 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import List, Iterable
+from enum import Enum
+
+
+class Mode(Enum):
+    SEARCH = 'S'
+    MATCH = 'M'
 
 
 def main():
@@ -8,8 +14,13 @@ def main():
 
 
 class RegexEntity(ABC):
-    def __init__(self, pattern: str):
+    def __init__(self, pattern: str, mode: Mode):
         self._pattern = pattern
+        self._mode = mode
+        self._last = False
+
+    def should_be_last(self):
+        self._last = True
 
     @abstractmethod
     def apply(self, text: str) -> Iterable[int]:
@@ -23,28 +34,31 @@ class RegexEntity(ABC):
 
 class Regex:
     def __init__(self, patterns: str):
-        self._entities = self._parse_entities(patterns)
+        self._entities: List[RegexEntity] = []
+        self._mode = Mode.SEARCH
+        self._text = ''
+        self._parse_entities(patterns)
 
-    @staticmethod
-    def _parse_entities(patterns: str) -> List[RegexEntity]:
-        index = 0
-        entities = []
-        text = ''
-        while index < len(patterns):
+    def _parse_entities(self, patterns: str):
+        for index in range(len(patterns)):
             match patterns[index]:
+                case '^':
+                    self._mode = Mode.MATCH
                 case '.':
-                    if text:
-                        entities.append(RegexText(text))
-                    entities.append(RegexDot())
-                    text = ''
-                    index += 1
+                    self._check_text()
+                    self._entities.append(RegexDot(self._mode))
+                case '$':
+                    self._check_text()
+                    self._entities and self._entities[-1].should_be_last()
+                    break
                 case a:
-                    text += a
-                    index += 1
-        if text:
-            entities.append(RegexText(text))
+                    self._text += a
+        self._check_text()
 
-        return entities
+    def _check_text(self):
+        if self._text:
+            self._entities.append(RegexText(self._text, self._mode))
+            self._text = ''
 
     def start_match(self, text: str) -> bool:
         return self._matches(self._entities, text, 0)
@@ -64,24 +78,30 @@ class Regex:
 
 
 class RegexDot(RegexEntity):
-    def __init__(self):
-        super().__init__('.')
+    def __init__(self, mode: Mode):
+        super().__init__('.', mode)
 
     def apply(self, text: str):
-        return [1]
+        if self._mode == Mode.MATCH:
+            return [1]
+        if self._last:
+            return [len(text)]
+        return list(range(1, len(text) + 1))
 
 
 class RegexText(RegexEntity):
-    def __init__(self, text: str):
-        super().__init__(text)
+    def __init__(self, text: str, mode: Mode):
+        super().__init__(text, mode)
 
     def apply(self, text: str):
         pt_len = len(self._pattern)
         if pt_len > len(text):
-            return False
+            return []
+        rng = [0] if self._mode == Mode.MATCH \
+            else range(len(text) - pt_len + 1)
         indexes = [pt_len + i if self._pattern == text[i:pt_len + i] else -1
-                   for i in range(len(text) - pt_len + 1)]
-        return list(filter(lambda x: x > -1, indexes))
+                   for i in rng]
+        return list(filter(lambda x: x > -1 if not self._last else x == len(text), indexes))
 
 
 if __name__ == '__main__':

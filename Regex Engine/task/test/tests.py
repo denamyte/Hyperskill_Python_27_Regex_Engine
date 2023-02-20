@@ -1,6 +1,6 @@
 # coding: utf-8
 from hstest.stage_test import StageTest
-from hstest.test_case import SimpleTestCase
+from hstest.test_case import TestCase, SimpleTestCase
 
 
 class RegexTest(StageTest):
@@ -29,7 +29,30 @@ class RegexTest(StageTest):
         ("a", "apple",      "True",     "If the input string contains the regex, it should return True!"),
         (".", "apple",      "True",     "Even a single wild-card character '.' can produce a match!"),
         ("apwle", "apple",  "False",    "Two different patterns should not return True!"),
-        ("peach", "apple",  "False",    "Two different patterns should not return True!")
+        ("peach", "apple",  "False",    "Two different patterns should not return True!"),
+        # stage 4
+        ('^app', 'apple',           "True",
+            "A regex starting with '^' should match the following pattern only at the beginning of the input string!"),
+        ('le$', 'apple',            "True",
+            "A regex ending with '$' should match the preceding pattern only at the end of the input string!"),
+        ('^a', 'apple',             "True",
+            "A regex starting with '^' should match the following pattern only at the beginning of the input string!"),
+        ('.$', 'apple',             "True",
+            "A regex ending with '$' should match the preceding pattern only at the end of the input string!"),
+        ('apple$', 'tasty apple',   "True",
+            "A regex ending with '$' should match the preceding pattern only at the end of the input string!"),
+        ('^apple', 'apple pie',     "True",
+            "A regex starting with '^' should match the following pattern only at the beginning of the input string!"),
+        ('^apple$', 'apple',        "True",
+            "A regex starting with '^' and ending with '$' should match only the enclosed literals!"),
+        ('^apple$', 'tasty apple',  "False",
+            "A regex starting with '^' and ending with '$' should match only the enclosed literals!"),
+        ('^apple$', 'apple pie',    "False",
+            "A regex starting with '^' and ending with '$' should match only the enclosed literals!"),
+        ('app$', 'apple',           "False",
+            "A regex ending with '$' should match the preceding pattern only at the end of the input string!"),
+        ('^le', 'apple',            "False",
+            "A regex starting with '^' should match the following pattern only at the beginning of the input string!")
     ]
 
 
