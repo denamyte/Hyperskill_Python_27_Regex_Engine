@@ -1,11 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import List, Iterable
+from typing import List, Iterable, Tuple
 from enum import Enum
 
 
 class Mode(Enum):
     SEARCH = 'S'
     MATCH = 'M'
+
+
+RANGES = {'?': [0, 1],
+          '*': [0, 0],
+          '+': [1, 0]}
 
 
 def main():
@@ -16,7 +21,7 @@ def main():
 class RegexEntity(ABC):
     def __init__(self, pattern: str, mode: Mode):
         self._pattern = pattern
-        self._mode = mode
+        self.mode = mode
         self._last = False
 
     def should_be_last(self):
@@ -35,30 +40,34 @@ class RegexEntity(ABC):
 class Regex:
     def __init__(self, patterns: str):
         self._entities: List[RegexEntity] = []
-        self._mode = Mode.SEARCH
-        self._text = ''
         self._parse_entities(patterns)
 
     def _parse_entities(self, patterns: str):
-        for index in range(len(patterns)):
+        mode = Mode.SEARCH
+        index = 0
+        while index < len(patterns):
             match patterns[index]:
+                case '\\':
+                    len(patterns) > 1 and self._entities.append(
+                        RegexChar(patterns[index + 1], mode))
+                    index += 1
                 case '^':
-                    self._mode = Mode.MATCH
-                case '.':
-                    self._check_text()
-                    self._entities.append(RegexDot(self._mode))
+                    ...
                 case '$':
-                    self._check_text()
                     self._entities and self._entities[-1].should_be_last()
                     break
+                case '.':
+                    self._entities.append(RegexDot(mode))
+                case a if a in '?*+':
+                    if self._entities:
+                        last = self._entities[-1]
+                        self._entities = self._entities[:-1] + [
+                            RegexRepetition(a, mode, last, RANGES[a])
+                        ]
                 case a:
-                    self._text += a
-        self._check_text()
-
-    def _check_text(self):
-        if self._text:
-            self._entities.append(RegexText(self._text, self._mode))
-            self._text = ''
+                    self._entities.append(RegexChar(a, mode))
+            mode = Mode.MATCH
+            index += 1
 
     def start_match(self, text: str) -> bool:
         return self._matches(self._entities, text, 0)
@@ -82,26 +91,54 @@ class RegexDot(RegexEntity):
         super().__init__('.', mode)
 
     def apply(self, text: str):
-        if self._mode == Mode.MATCH:
+        if self.mode == Mode.MATCH:
             return [1]
         if self._last:
             return [len(text)]
         return list(range(1, len(text) + 1))
 
 
-class RegexText(RegexEntity):
+class RegexChar(RegexEntity):
     def __init__(self, text: str, mode: Mode):
         super().__init__(text, mode)
 
     def apply(self, text: str):
-        pt_len = len(self._pattern)
-        if pt_len > len(text):
-            return []
-        rng = [0] if self._mode == Mode.MATCH \
-            else range(len(text) - pt_len + 1)
-        indexes = [pt_len + i if self._pattern == text[i:pt_len + i] else -1
-                   for i in rng]
+        rng = [0] if self.mode == Mode.MATCH else range(len(text))
+        indexes = [i + 1 if self._pattern == text[i] else -1 for i in rng]
         return list(filter(lambda x: x > -1 if not self._last else x == len(text), indexes))
+
+
+class RegexRepetition(RegexEntity):
+    def __init__(self, pattern: str, mode: Mode, entity: RegexEntity,
+                 rng: Tuple[int, int]):
+        super().__init__(pattern, mode)
+        self._entity = entity
+        self._range = rng
+
+    def mode(self, m: Mode):
+        super().mode = m
+        self._entity.mode = m
+
+    def apply(self, text: str) -> Iterable[int]:
+        length = len(text)
+        res_indices = [] if self._range[0] else [0]  # none-existence of entity is included
+        drop_matches = 0 if not self._range[0] else self._range[0] - 1
+        max_matches = self._range[1] or length
+        while text and max_matches:
+            ent_indices = self._entity.apply(text)
+            if not ent_indices:
+                break
+            ind = list(ent_indices)[0]
+            if drop_matches:
+                drop_matches -= 1
+            else:
+                res_indices.append(length - len(text) + ind)
+            text = text[ind:]
+            max_matches -= 1
+
+        return res_indices if not self._last \
+            else [length] if length in res_indices \
+            else []
 
 
 if __name__ == '__main__':
